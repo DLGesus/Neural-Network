@@ -5,11 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.Random;
-import java.io.FileWriter;
 import java.io.PrintWriter;
 
 public class Neuron {
@@ -159,7 +157,7 @@ public class Neuron {
 	 * @param addition
 	 */
 	public void addToNeuron(BigDecimal addition) {
-		neuron = neuron.add(addition);
+		neuron = neuron.add(addition, MathContext.DECIMAL64);
 	}
 
 	/**
@@ -172,9 +170,8 @@ public class Neuron {
 	 * @return neuron * weight[indexOfOutputNeuron]
 	 */
 	public BigDecimal FeedForward(int indexOfOutputNeuron) {
-		// System.out.println(weight[indexOfOutputNeuron]);
-		this.neuron = neuron.multiply(weight[indexOfOutputNeuron]);
-		return this.neuron;
+		//System.out.println(weight[indexOfOutputNeuron]);
+		return neuron.multiply(weight[indexOfOutputNeuron], MathContext.DECIMAL64);
 	}
 
 	/**
@@ -187,7 +184,8 @@ public class Neuron {
 	}
 
 	/**
-	 * Initializing Function Initializes the weightDelta array by calculating
+	 * Initializing Function 
+	 * Initializes the weightDelta array by calculating
 	 * the weightDetla from an array of gamma.
 	 * 
 	 * @param gamma
@@ -195,12 +193,15 @@ public class Neuron {
 	 */
 	public void initWeightDelta(BigDecimal[] gamma) {
 		for (int i = 0; i < numberOfConnectedNeurons; i++) {
-			weightDelta[i] = neuron.multiply(gamma[i]);
+			//System.out.println("Neuron : " + neuron);
+			weightDelta[i] = neuron.multiply(gamma[i], MathContext.DECIMAL64);
+			//System.out.println("weightDelta : " + weightDelta[i]);
 		}
 	}
 
 	/**
-	 * Mutates mutates all the weights on the basis of the given chance param
+	 * Mutates 
+	 * mutates all the weights on the basis of the given chance param
 	 * 
 	 * Types of Mutations 1. weight * -1 2. new weight 3. increase by a percent
 	 * 4. decrease by a percent
@@ -218,16 +219,17 @@ public class Neuron {
 				weight[i] = new BigDecimal(String.valueOf(r.nextFloat() - .5f));
 			} else if (rn <= num * 3) {
 				BigDecimal factor = new BigDecimal(String.valueOf(r.nextFloat() + 1f));
-				weight[i].multiply(factor);
+				weight[i].multiply(factor, MathContext.DECIMAL64);
 			} else if (rn <= num * 4) {
 				BigDecimal factor = new BigDecimal(String.valueOf(r.nextFloat()));
-				weight[i].multiply(factor);
+				weight[i].multiply(factor, MathContext.DECIMAL64);
 			}
 		}
 	}
 
 	/**
-	 * Setter Function Set learning rate
+	 * Setter Function 
+	 * Set learning rate
 	 * 
 	 * @param learningRate
 	 */
@@ -254,13 +256,14 @@ public class Neuron {
 	}
 
 	/**
-	 * Activation Function applies the activation function of TanH on the itself
+	 * Activation Function 
+	 * applies the activation function of TanH on the itself
 	 */
 	public void tanHNeuron() {
 		neuron = BigDecimal.valueOf(Math.tanh(neuron.doubleValue()));
 	}
 
-	/*
+	/**
 	 * (non-Javadoc)
 	 * 
 	 * @see java.lang.Object#toString()
@@ -271,13 +274,15 @@ public class Neuron {
 	}
 
 	/**
-	 * Update Function updates weights by using weightDelta and learning rate
+	 * Update Function 
+	 * updates weights by using weightDelta and learning rate
 	 * 
 	 * Weight sub(i) = weight sub(i) - (weightDelta sub(i) * learningRate)
 	 */
 	public void updateWeights() {
 		for (int i = 0; i < weight.length; i++) {
-			weight[i] = weight[i].add(weightDelta[i].multiply(learningRate));
+			weight[i] = weight[i].subtract(weightDelta[i].multiply(learningRate), MathContext.DECIMAL64);
+			//System.out.println("weight : " + weight[i]);
 		}
 	}
 	

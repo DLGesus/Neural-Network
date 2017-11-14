@@ -3,7 +3,6 @@ package network.main;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Random;
 
 public class Main {
@@ -33,23 +32,23 @@ public class Main {
 	}
 	
 	public static void main(String[] args) throws InterruptedException, FileNotFoundException, IOException {
-		int[] layers = {2, 2, 1};
+		int[] layers = {2, 3, 1};
 		Neuron[] inputs = new Neuron[layers[0]];
 		Neuron[] dinputs = new Neuron[layers[0]];
 		BigDecimal[] expected = new BigDecimal[layers[layers.length - 1]];
 		BigDecimal[] dexpected = new BigDecimal[layers[layers.length - 1]];
-		double learningRate = .8;
-		Random r = new Random();
-		NeuralNetwork n = new NeuralNetwork(layers, BigDecimal.valueOf(learningRate));
+
+		double learningRate = .05;
+		FeedForwardNeuralNetwork n = new FeedForwardNeuralNetwork(layers, BigDecimal.valueOf(learningRate));
 		NeuronLayer output;
-		int numberOfIterations = 0;
+		int numberOfIterations = 200;
 		double stopValue = .35;
 
 		/*
 		 * Testing 
 		 * f(x, y) = (x + 5^(1/2))/y
-		 * 
-		 **/        
+		 **/
+		
 		inputs[0] = new Neuron(BigDecimal.ONE);
         dinputs[0] = new Neuron(reduce(inputs[0].getNeuron()));
         //inputs[0].CSVwriter(0);
@@ -57,31 +56,42 @@ public class Main {
         dinputs[1] = new Neuron(reduce(inputs[1].getNeuron()));
         expected[0] = testFunc(inputs[0].getNeuron(), inputs[1].getNeuron());
 		dexpected[0] = reduce(expected[0]);
-       // inputs[1].CSVwriter(1);
-
-		long startTime = System.nanoTime();
+        // inputs[1].CSVwriter(1);
 		
-		double averageError = 1;
-		while(Math.abs(averageError) > stopValue){
-			n.mutate(1f);
-			n.FeedForward(dinputs);
-			BigDecimal error = n.getError(dexpected);
-			averageError = error.doubleValue();
-			System.out.println(averageError);
-		}
-		numberOfIterations = 10;
-		for(int i = 1; i <= numberOfIterations; i++){
-			System.out.println("Trial: " + i);
+
+		int j = 1;
+		int numberOfGoodResults = 0;
+		while(true){
+			long startTime = System.nanoTime();
+			n = new FeedForwardNeuralNetwork(layers, BigDecimal.valueOf(learningRate));
+			double averageError = 1;
+			while(Math.abs(averageError) > stopValue){
+				n.mutate(1f);
+				n.FeedForward(dinputs);
+				BigDecimal error = n.getError(dexpected);
+				averageError = error.doubleValue();
+				//System.out.println(averageError);
+			}
+			for(int i = 1; i <= numberOfIterations; i++){
+				
+			    n.FeedForward(dinputs);
+			   
+				n.backProp(dexpected);
+			    
+			}
+			System.out.println("Trial: " + j);
 			
-		    n.FeedForward(dinputs);
 			output = new NeuronLayer(n.getOutputLayer());
-		   
-			n.backProp(dexpected);
-		    
 			System.out.println((output.getLayerNeurons()[0].getNeuron()) + " : "+ dexpected[0]);
+			if(n.getError(dexpected).floatValue() < .01f){
+				numberOfGoodResults++;
+			}
+			System.out.println("Good Results: " + numberOfGoodResults);
+			long endTime = System.nanoTime();
+			System.out.println("Time: " + (endTime - startTime) / 1000000000);
+			j++;
+			Thread.sleep(300);
 		}
-		long endTime = System.nanoTime();
-		System.out.println((endTime - startTime) / 1000000000);
 	}
 
 	/**
